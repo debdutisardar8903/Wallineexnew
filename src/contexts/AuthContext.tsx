@@ -43,8 +43,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           uid: firebaseUser.uid
         };
         setUser(userData);
-        // Check if user is admin (you can customize this logic)
-        setIsAdmin(firebaseUser.email === 'admin@pixelmart.com');
+        // Check if user is admin (matches database rules)
+        setIsAdmin(firebaseUser.email === 'admin.743245da@gmail.com');
       } else {
         setUser(null);
         setIsAdmin(false);

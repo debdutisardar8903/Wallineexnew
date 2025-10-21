@@ -1,8 +1,58 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import ProductGrid from '@/components/ProductGrid';
+import { getAllProducts } from '@/lib/database';
 
 export default function Home() {
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setIsLoading(true);
+        const fetchedProducts = await getAllProducts();
+        
+        // Transform database products to match ProductGrid interface
+        const transformedProducts = fetchedProducts.map(product => ({
+          id: product.id, // Keep original Firebase ID
+          name: product.title, // Map title to name
+          image: product.image,
+          price: product.price,
+          originalPrice: product.originalPrice,
+          discount: product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : undefined,
+          rating: product.rating,
+          reviews: product.reviews
+        }));
+        
+        setProducts(transformedProducts);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        setProducts([]); // Set empty array on error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="font-sans">
+        <section className="pt-24 px-4">
+          <div className="mx-auto max-w-6xl">
+            <div className="text-center py-12">
+              <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading products...</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="font-sans">
       {/* Video Banner */}
@@ -16,7 +66,7 @@ export default function Home() {
             playsInline
           >
             <source
-              src="https://ebundletools.in/wp-content/uploads/2025/10/diwali-banner-ebundletools.mp4"
+              src="https://pixelmart-storage.s3.ap-south-1.amazonaws.com/pixelmart/products/birthday!-Picwand.mp4"
               type="video/mp4"
             />
             Your browser does not support the video tag.
@@ -37,7 +87,7 @@ export default function Home() {
                 <span className="text-blue-800"> for Latest and Important Tool Updates and News only….  </span>
                 <span 
                   className="text-blue-600 hover:text-blue-800 cursor-pointer hover:underline transition-colors duration-200"
-                  onClick={() => window.open('https://t.me/your_channel', '_blank')}
+                  onClick={() => window.open('https://t.me/wallineex', '_blank')}
                 >
                   Click here to Join
                 </span>
@@ -63,87 +113,23 @@ export default function Home() {
       {/* Product Grid */}
       <section className="px-4 mt-6">
         <div className="mx-auto max-w-6xl">
-          <ProductGrid products={sampleProducts} />
+          {products.length > 0 ? (
+            <ProductGrid products={products} />
+          ) : (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No products available</h3>
+              <p className="text-gray-600">
+                Products will appear here once they are added to the database.
+              </p>
+            </div>
+          )}
         </div>
       </section>
     </div>
   );
 }
-
-// Sample products data
-const sampleProducts = [
-  {
-    id: 1,
-    name: "Premium Wireless Headphones",
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop",
-    price: 99.99,
-    originalPrice: 149.99,
-    discount: 33,
-    rating: 4.5,
-    reviews: 128
-  },
-  {
-    id: 2,
-    name: "Smart Watch Series 5",
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop",
-    price: 299.99,
-    originalPrice: 399.99,
-    discount: 25,
-    rating: 4.8,
-    reviews: 256
-  },
-  {
-    id: 3,
-    name: "Bluetooth Speaker",
-    image: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=400&fit=crop",
-    price: 79.99,
-    rating: 4.3,
-    reviews: 89
-  },
-  {
-    id: 4,
-    name: "Laptop Stand Adjustable",
-    image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&h=400&fit=crop",
-    price: 49.99,
-    originalPrice: 69.99,
-    discount: 29,
-    rating: 4.6,
-    reviews: 167
-  },
-  {
-    id: 5,
-    name: "USB-C Hub Multi-Port",
-    image: "https://images.unsplash.com/photo-1625842268584-8f3296236761?w=400&h=400&fit=crop",
-    price: 39.99,
-    rating: 4.2,
-    reviews: 94
-  },
-  {
-    id: 6,
-    name: "Wireless Charging Pad",
-    image: "https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=400&h=400&fit=crop",
-    price: 29.99,
-    originalPrice: 39.99,
-    discount: 25,
-    rating: 4.4,
-    reviews: 73
-  },
-  {
-    id: 7,
-    name: "Gaming Mouse RGB",
-    image: "https://images.unsplash.com/photo-1527814050087-3793815479db?w=400&h=400&fit=crop",
-    price: 59.99,
-    rating: 4.7,
-    reviews: 142
-  },
-  {
-    id: 8,
-    name: "Mechanical Keyboard",
-    image: "https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=400&h=400&fit=crop",
-    price: 129.99,
-    originalPrice: 179.99,
-    discount: 28,
-    rating: 4.9,
-    reviews: 203
-  }
-];

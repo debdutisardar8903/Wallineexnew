@@ -2,7 +2,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
+import { WishlistProvider } from "@/contexts/WishlistContext";
 import ConditionalHeader from "@/components/ConditionalHeader";
+import ConditionalFooter from "@/components/ConditionalFooter";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,8 +29,11 @@ export default function RootLayout({ children }) {
       >
         <AuthProvider>
           <CartProvider>
-            <ConditionalHeader />
-            {children}
+            <WishlistProvider>
+              <ConditionalHeader />
+              {children}
+              <ConditionalFooter />
+            </WishlistProvider>
           </CartProvider>
         </AuthProvider>
       </body>

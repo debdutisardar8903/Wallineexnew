@@ -6,12 +6,17 @@ import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isCompanyMenuOpen, setIsCompanyMenuOpen] = useState(false);
+  const [isCategoriesMenuOpen, setIsCategoriesMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { user, logout, isAdmin } = useAuth();
   const { cartCount } = useCart();
+  const { wishlistCount } = useWishlist();
   const pathname = usePathname();
 
   useEffect(() => {
@@ -24,8 +29,42 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isSearchOpen) {
+        setIsSearchOpen(false);
+      }
+    };
+
+    if (isSearchOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isSearchOpen]);
+
   const handleLogout = async () => {
     await logout();
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // Navigate to search results page or handle search
+      console.log('Searching for:', searchQuery);
+      setIsSearchOpen(false);
+      setSearchQuery('');
+    }
+  };
+
+  const toggleSearch = () => {
+    setIsSearchOpen(!isSearchOpen);
+    if (!isSearchOpen) {
+      // Focus on search input when opening
+      setTimeout(() => {
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) searchInput.focus();
+      }, 100);
+    }
   };
 
   return (
@@ -61,12 +100,70 @@ export default function Header() {
             >
               Products
             </Link>
-            <Link 
-              href="/categories" 
-              className="text-gray-700 hover:text-gray-900 font-medium transition-colors duration-200"
-            >
-              Categories
-            </Link>
+            {/* Categories Dropdown */}
+            <div className="relative group">
+              <button 
+                className="text-gray-700 hover:text-gray-900 font-medium transition-colors duration-200 flex items-center space-x-1"
+                onMouseEnter={() => setIsCategoriesMenuOpen(true)}
+                onMouseLeave={() => setIsCategoriesMenuOpen(false)}
+              >
+                <span>Categories</span>
+                <svg 
+                  className={`w-4 h-4 transition-transform duration-200 ${isCategoriesMenuOpen ? 'rotate-180' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {/* Categories Dropdown Menu */}
+              <div 
+                className={`absolute left-0 top-8 w-48 bg-white rounded-lg shadow-lg border transition-all duration-200 py-2 z-50 ${
+                  isCategoriesMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+                }`}
+                onMouseEnter={() => setIsCategoriesMenuOpen(true)}
+                onMouseLeave={() => setIsCategoriesMenuOpen(false)}
+              >
+                <Link 
+                  href="/categories/ebooks" 
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
+                >
+                  eBooks
+                </Link>
+                <Link 
+                  href="/categories/courses" 
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
+                >
+                  Courses
+                </Link>
+                <Link 
+                  href="/categories/templates" 
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
+                >
+                  Templates
+                </Link>
+                <Link 
+                  href="/categories/digital-tools" 
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
+                >
+                  Digital Tools
+                </Link>
+                <Link 
+                  href="/categories/music-audio" 
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
+                >
+                  Music & Audio
+                </Link>
+                <Link 
+                  href="/categories/graphics-design" 
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
+                >
+                  Graphics & Design
+                </Link>
+              </div>
+            </div>
             {/* Company Dropdown */}
             <div className="relative group">
               <button 
@@ -127,6 +224,7 @@ export default function Header() {
             </div>
             <button 
               key="search-button"
+              onClick={toggleSearch}
               className="p-2 text-gray-600 hover:text-gray-900 transition-colors duration-200 hover:bg-gray-100 rounded-lg"
               aria-label="Search"
             >
@@ -136,8 +234,25 @@ export default function Header() {
             </button>
           </nav>
 
-          {/* Right Side - Cart, Auth */}
+          {/* Right Side - Wishlist, Cart, Auth */}
           <div className="flex items-center space-x-4">
+            {/* Wishlist Icon */}
+            <Link 
+              href="/wishlist"
+              className="p-2 text-gray-600 hover:text-gray-900 transition-colors duration-200 hover:bg-gray-100 rounded-lg relative block"
+              aria-label="Wishlist"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+              {/* Wishlist Badge */}
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {wishlistCount > 99 ? '99+' : wishlistCount}
+                </span>
+              )}
+            </Link>
+
             {/* Cart Icon */}
             <Link 
               href="/cart"
@@ -228,6 +343,53 @@ export default function Header() {
           </div>
         </div>
       </div>
+
+      {/* Search Popup Overlay */}
+      {isSearchOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-start justify-center pt-20">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl mx-4 p-6 animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Search Products</h3>
+              <button
+                onClick={() => setIsSearchOpen(false)}
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                aria-label="Close search"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <form onSubmit={handleSearchSubmit} className="space-y-4">
+              <div className="relative">
+                <input
+                  id="search-input"
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search for products, categories, or keywords..."
+                  className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                />
+                <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-500">Press Enter to search or ESC to close</p>
+                <button
+                  type="submit"
+                  disabled={!searchQuery.trim()}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200"
+                >
+                  Search
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

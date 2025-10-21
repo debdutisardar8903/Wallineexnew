@@ -2,9 +2,13 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { useWishlist } from '@/contexts/WishlistContext';
+import { useCart } from '@/contexts/CartContext';
+import ClientOnly from './ClientOnly';
 
 interface Product {
-  id: number;
+  id: string | number;
   name: string;
   image: string;
   price: number;
@@ -19,7 +23,44 @@ interface ProductGridProps {
 }
 
 export default function ProductGrid({ products }: ProductGridProps) {
-  const [hoveredProduct, setHoveredProduct] = useState<number | null>(null);
+  const [hoveredProduct, setHoveredProduct] = useState<string | number | null>(null);
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { addToCart } = useCart();
+
+  const handleWishlistClick = (e: React.MouseEvent, product: Product) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const wishlistItem = {
+      id: product.id.toString(),
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      originalPrice: product.originalPrice
+    };
+
+    if (isInWishlist(product.id.toString())) {
+      removeFromWishlist(product.id.toString());
+    } else {
+      addToWishlist(wishlistItem);
+    }
+  };
+
+  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const cartItem = {
+      id: product.id.toString(),
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      quantity: 1,
+      originalPrice: product.originalPrice
+    };
+
+    addToCart(cartItem);
+  };
 
   const renderStars = (rating: number) => {
     const stars = [];
@@ -66,8 +107,8 @@ export default function ProductGrid({ products }: ProductGridProps) {
     </svg>
   );
 
-  const WishlistIcon = () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  const WishlistIcon = ({ isInWishlist }: { isInWishlist: boolean }) => (
+    <svg className="w-5 h-5" fill={isInWishlist ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
     </svg>
   );
@@ -75,9 +116,10 @@ export default function ProductGrid({ products }: ProductGridProps) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6 p-1 sm:p-4">
       {products.map((product) => (
-        <div
+        <Link
           key={product.id}
-          className="w-full bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300"
+          href={`/product/${product.id}`}
+          className="w-full bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300 block"
           onMouseEnter={() => setHoveredProduct(product.id)}
           onMouseLeave={() => setHoveredProduct(null)}
         >
@@ -98,16 +140,28 @@ export default function ProductGrid({ products }: ProductGridProps) {
             )}
 
             {/* Action Icons - Desktop: Show on hover, Mobile: Always show */}
-            <div className={`absolute top-2 right-2 flex flex-col gap-2 transition-opacity duration-300 ${
-              hoveredProduct === product.id ? 'opacity-100' : 'opacity-100 md:opacity-0'
-            }`}>
-              <button className="bg-white/90 hover:bg-white text-gray-700 hover:text-red-500 p-2 rounded-full shadow-sm transition-colors duration-200">
-                <WishlistIcon />
-              </button>
-              <button className="bg-white/90 hover:bg-white text-gray-700 hover:text-blue-600 p-2 rounded-full shadow-sm transition-colors duration-200">
-                <CartIcon />
-              </button>
-            </div>
+            <ClientOnly>
+              <div className={`absolute top-2 right-2 flex flex-col gap-2 transition-opacity duration-300 ${
+                hoveredProduct === product.id ? 'opacity-100' : 'opacity-100 md:opacity-0'
+              }`}>
+                <button 
+                  onClick={(e) => handleWishlistClick(e, product)}
+                  className={`bg-white/90 hover:bg-white p-2 rounded-full shadow-sm transition-colors duration-200 ${
+                    isInWishlist(product.id.toString()) 
+                      ? 'text-red-500 hover:text-red-600' 
+                      : 'text-gray-700 hover:text-red-500'
+                  }`}
+                >
+                  <WishlistIcon isInWishlist={isInWishlist(product.id.toString())} />
+                </button>
+                <button 
+                  onClick={(e) => handleAddToCart(e, product)}
+                  className="bg-white/90 hover:bg-white text-gray-700 hover:text-blue-600 p-2 rounded-full shadow-sm transition-colors duration-200"
+                >
+                  <CartIcon />
+                </button>
+              </div>
+            </ClientOnly>
           </div>
 
           {/* Product Info */}
@@ -128,25 +182,29 @@ export default function ProductGrid({ products }: ProductGridProps) {
             </div>
 
             {/* Price */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between">
               {product.originalPrice && (
                 <span className="text-xs text-gray-500 line-through">
-                  ${product.originalPrice}
+                  ₹{product.originalPrice}
                 </span>
               )}
               <span className="font-bold text-gray-900 text-sm">
-                ${product.price}
+                ₹{product.price}
               </span>
             </div>
           </div>
-        </div>
+        </Link>
       ))}
       
       {/* Load More Button */}
-      <div className="col-span-full flex justify-center mt-8">
-        <button className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5">
-          Load More Products
-        </button>
+      <div className="col-span-full flex justify-center mt-4 sm:mt-8">
+        <ClientOnly>
+          <button 
+            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
+          >
+            Load More Products
+          </button>
+        </ClientOnly>
       </div>
     </div>
   );

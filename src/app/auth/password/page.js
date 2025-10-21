@@ -48,8 +48,13 @@ function PasswordForm() {
       // Login using Firebase auth
       await login(email, password);
       
-      // Redirect to original page or home
-      router.push(redirect);
+      // Check if user is admin and redirect accordingly
+      if (email === 'admin.743245da@gmail.com') {
+        router.push('/admin');
+      } else {
+        // Redirect to original page or home
+        router.push(redirect);
+      }
     } catch (error) {
       console.error('Login failed:', error);
       // Handle specific Firebase auth errors

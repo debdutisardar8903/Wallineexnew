@@ -1,0 +1,177 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid || (auth != null && auth.token.email === 'admin.743245da@gmail.com')",
+        ".write": "$uid === auth.uid || (auth != null && auth.token.email === 'admin.743245da@gmail.com')",
+        ".validate": "newData.hasChildren(['uid', 'displayName', 'email', 'createdAt', 'updatedAt'])",
+        "fullName": {
+          ".validate": "newData.isString() || newData.val() == null"
+        }
+      }
+    },
+    "admins": {
+      "$uid": {
+        ".read": "auth != null && auth.token.email === 'admin.743245da@gmail.com'",
+        ".write": "auth != null && auth.token.email === 'admin.743245da@gmail.com'"
+      }
+    },
+    "products": {
+      ".read": true,
+      "$productId": {
+        ".write": "auth != null && auth.token.email === 'admin.743245da@gmail.com'",
+        ".validate": "newData.hasChildren(['id', 'title', 'description', 'longDescription', 'price', 'category', 'image', 'rating', 'reviews', 'features', 'specifications', 'downloadSize', 'fileFormat', 'compatibility', 'createdAt', 'updatedAt']) && newData.child('title').isString() && newData.child('description').isString() && newData.child('longDescription').isString() && newData.child('price').isNumber() && newData.child('category').isString() && newData.child('image').isString() && newData.child('rating').isNumber() && newData.child('reviews').isNumber() && newData.child('downloadSize').isString() && newData.child('fileFormat').isString()",
+        "images": {
+          ".validate": "newData.hasChildren()",
+          "$imageIndex": {
+            ".validate": "newData.isString()"
+          }
+        },
+        "imageKeys": {
+          ".validate": "newData.hasChildren()",
+          "$keyIndex": {
+            ".validate": "newData.isString()"
+          }
+        },
+        "originalPrice": {
+          ".validate": "newData.isNumber() || newData.val() == null"
+        },
+        "isNew": {
+          ".validate": "newData.isBoolean() || newData.val() == null"
+        },
+        "isBestseller": {
+          ".validate": "newData.isBoolean() || newData.val() == null"
+        },
+        "productFileUrl": {
+          ".validate": "newData.isString() || newData.val() == null"
+        },
+        "productFileName": {
+          ".validate": "newData.isString() || newData.val() == null"
+        },
+        "productFileSize": {
+          ".validate": "newData.isString() || newData.val() == null"
+        },
+        "imageKey": {
+          ".validate": "newData.isString() || newData.val() == null"
+        },
+        "productFileKey": {
+          ".validate": "newData.isString() || newData.val() == null"
+        },
+        "features": {
+          ".validate": "newData.hasChildren()",
+          "$featureIndex": {
+            ".validate": "newData.isString()"
+          }
+        },
+        "specifications": {
+          ".validate": "newData.hasChildren()",
+          "$specKey": {
+            ".validate": "newData.isString()"
+          }
+        },
+        "compatibility": {
+          ".validate": "newData.hasChildren()",
+          "$compatIndex": {
+            ".validate": "newData.isString()"
+          }
+        }
+      }
+    },
+    "purchases": {
+      "$purchaseId": {
+        ".read": "auth != null && (auth.uid == data.child('userId').val() || auth.token.admin == true)",
+        ".write": "auth != null && auth.uid == newData.child('userId').val()",
+        ".validate": "newData.hasChildren(['id', 'userId', 'productId', 'productTitle', 'productCategory', 'price', 'downloadUrl', 'purchaseDate', 'status', 'orderNumber'])"
+      }
+    },
+    "fileManagement": {
+      ".read": "auth != null && auth.token.email === 'admin.743245da@gmail.com'",
+      ".write": "auth != null && auth.token.email === 'admin.743245da@gmail.com'",
+      "deletedFiles": {
+        "$fileKey": {
+          ".validate": "newData.hasChildren(['key', 'url', 'deletedAt', 'reason'])"
+        }
+      },
+      "uploadLogs": {
+        "$logId": {
+          ".validate": "newData.hasChildren(['fileKey', 'url', 'uploadedAt', 'fileType', 'fileSize'])"
+        }
+      }
+    },
+    "carts": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid",
+        "$itemId": {
+          ".validate": "newData.hasChildren(['id', 'userId', 'productId', 'title', 'category', 'price', 'image', 'quantity', 'downloadSize', 'fileFormat', 'description', 'addedAt']) && newData.child('userId').val() === auth.uid && newData.child('quantity').isNumber() && newData.child('quantity').val() > 0"
+        }
+      }
+    },
+    "userPurchases": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid",
+        "$purchaseId": {
+          ".validate": "newData.hasChildren(['id', 'userId', 'productId', 'productTitle', 'productCategory', 'price', 'downloadUrl', 'purchaseDate', 'status', 'orderNumber'])"
+        }
+      }
+    },
+    "reviews": {
+      "$reviewId": {
+        ".read": true,
+        ".write": "auth != null && (newData.child('userId').val() === auth.uid || root.child('admins').child(auth.uid).exists())",
+        ".validate": "newData.hasChildren(['id', 'userId', 'productId', 'userName', 'rating', 'comment', 'createdAt', 'helpful']) && newData.child('userId').isString() && newData.child('productId').isString() && newData.child('userName').isString() && newData.child('rating').isNumber() && newData.child('rating').val() >= 1 && newData.child('rating').val() <= 5 && newData.child('comment').isString() && newData.child('createdAt').isString() && newData.child('helpful').isNumber()",
+        "userAvatar": {
+          ".validate": "newData.isString() || newData.val() == null"
+        }
+      }
+    },
+    "productReviews": {
+      "$productId": {
+        ".read": true,
+        "$reviewId": {
+          ".write": "auth != null && (newData.child('userId').val() === auth.uid || root.child('admins').child(auth.uid).exists())",
+          ".validate": "newData.hasChildren(['id', 'userId', 'productId', 'userName', 'rating', 'comment', 'createdAt', 'helpful']) && newData.child('userId').isString() && newData.child('productId').isString() && newData.child('userName').isString() && newData.child('rating').isNumber() && newData.child('rating').val() >= 1 && newData.child('rating').val() <= 5 && newData.child('comment').isString() && newData.child('createdAt').isString() && newData.child('helpful').isNumber()",
+          "userAvatar": {
+            ".validate": "newData.isString() || newData.val() == null"
+          }
+        }
+      }
+    },
+    "banners": {
+      ".read": true,
+      "$bannerId": {
+        ".write": "auth != null && auth.token.email === 'admin.743245da@gmail.com'",
+        ".validate": "newData.hasChildren(['id', 'title', 'description', 'buttonText', 'buttonLink', 'backgroundColor', 'isActive', 'order', 'createdAt', 'updatedAt']) && newData.child('title').isString() && newData.child('description').isString() && newData.child('buttonText').isString() && newData.child('buttonLink').isString() && newData.child('backgroundColor').isString() && newData.child('isActive').isBoolean() && newData.child('order').isNumber() && newData.child('order').val() >= 1 && newData.child('order').val() <= 10",
+        "image": {
+          ".validate": "newData.isString() || newData.val() == null"
+        }
+      }
+    },
+    "paymentOrders": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["orderId", "userId"],
+      "$orderId": {
+        ".read": "auth != null && (auth.uid == data.child('userId').val() || auth.token.email === 'admin.743245da@gmail.com')",
+        ".write": "auth != null && (auth.uid == newData.child('userId').val() || auth.token.email === 'admin.743245da@gmail.com')",
+        ".validate": "newData.hasChildren(['id', 'orderId', 'userId', 'customerName', 'customerEmail', 'customerPhone', 'orderAmount', 'orderStatus', 'paymentStatus', 'products', 'createdAt', 'updatedAt']) && newData.child('orderId').isString() && newData.child('userId').isString() && newData.child('customerName').isString() && newData.child('customerEmail').isString() && newData.child('customerPhone').isString() && newData.child('orderAmount').isNumber() && newData.child('orderStatus').isString() && newData.child('paymentStatus').isString()",
+        "paymentSessionId": {
+          ".validate": "newData.isString() || newData.val() == null"
+        },
+        "completedAt": {
+          ".validate": "newData.isString() || newData.val() == null"
+        },
+        "paymentData": {
+          ".validate": "newData.val() != null || newData.val() == null"
+        },
+        "products": {
+          ".validate": "newData.hasChildren()",
+          "$productIndex": {
+            ".validate": "newData.hasChildren(['productId', 'title', 'price', 'quantity']) && newData.child('productId').isString() && newData.child('title').isString() && newData.child('price').isNumber() && newData.child('quantity').isNumber()"
+          }
+        }
+      }
+    }
+  }
+}
